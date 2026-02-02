@@ -42,7 +42,7 @@
                                 Total <span class="text-success">({{ $cartItems->totalPrice() }})</span>
                             </h5>
                         </div>
-                        <a href="{{ route('checkout.lineItems') }}" class="btn btn-success btn-lg">Checkout</a>
+                        <a href="{{ route('checkout.directPaymentMethod') }}" class="btn btn-success btn-lg">Checkout</a>
                     </div>
                 </div>
             @else

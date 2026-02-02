@@ -21,6 +21,8 @@ Route::prefix('courses')->group(function () {
 Route::prefix('checkout')->middleware('auth')->group(function () {
     Route::get('/', [CheckoutController::class, 'checkout'])->name('checkout');
     Route::get('/line-items', [CheckoutController::class, 'lineItemsCheckout'])->name('checkout.lineItems');
+    Route::get('/direct/payment-method', [CheckoutController::class, 'directPaymentMethod'])->name('checkout.directPaymentMethod');
+    Route::post('/direct/payment-method', [CheckoutController::class, 'storeDirectPaymentMethod'])->name('checkout.storeDirectPaymentMethod');
     Route::get('/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
 });

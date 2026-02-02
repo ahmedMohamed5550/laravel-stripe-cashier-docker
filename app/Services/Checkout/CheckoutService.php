@@ -16,14 +16,23 @@ class CheckoutService
     {
         return DB::transaction(function () {
             $cart = Cart::session()->with('courses')->first() ?? Cart::current();
-            $prices = $cart->courses()->pluck('stripe_price_id')->toArray();
 
-            $sessionOptions = $this->getSessionOptions($cart->id);
-            $customerOptions = $this->getCustomerOptions();
+            if (!$cart || $cart->courses->isEmpty()) {
+                return redirect()->route('home', ['message' => 'Cart is empty.']);
+            }
 
-            return Auth::user()
-            ->allowPromotionCodes()
-            ->checkout($prices, $sessionOptions, $customerOptions);
+            try {
+                $prices = $cart->courses()->pluck('stripe_price_id')->toArray();
+                $sessionOptions = $this->getSessionOptions($cart->id);
+                $customerOptions = $this->getCustomerOptions();
+
+                return Auth::user()
+                ->allowPromotionCodes()
+                ->checkout($prices, $sessionOptions, $customerOptions);
+            }
+            catch (\Exception $e) {
+                return redirect()->route('home', ['message' => 'Checkout error. Please try again.']);
+            }
         });
     }
 
@@ -31,30 +40,44 @@ class CheckoutService
     {
         return DB::transaction(function () {
             $cart = Cart::session()->with('courses')->first() ?? Cart::current();
-            $courses = $cart->courses()->get()->map(function ($course) {
-                return [
-                    'price_data' => [
-                        'currency' => env('CASHIER_CURRENCY', 'usd'),
-                        'product_data' => [
-                            'name' => $course->name,
+
+            if (!$cart || $cart->courses->isEmpty()) {
+                return redirect()->route('home', ['message' => 'Cart is empty.']);
+            }
+
+            try {
+                $courses = $cart->courses()->get()->map(function ($course) {
+                    return [
+                        'price_data' => [
+                            'currency' => env('CASHIER_CURRENCY', 'usd'),
+                            'product_data' => [
+                                'name' => $course->name,
+                            ],
+                            'unit_amount' => $course->price,
                         ],
-                        'unit_amount' => $course->price,
-                    ],
-                    'quantity' => 1,
-                    'adjustable_quantity' => [
-                        'enabled' => true,
-                        'minimum' => 1,
-                        'maximum' => 10,
-                    ],
-                ];
-            })->toArray();
+                        'quantity' => 1,
+                        'adjustable_quantity' => [
+                            'enabled' => true,
+                            'minimum' => 1,
+                            'maximum' => 10,
+                        ],
+                    ];
+                })->toArray();
 
-            $sessionOptions = $this->getSessionOptions($cart->id, $courses);
-            $customerOptions = $this->getCustomerOptions();
+                if (empty($courses)) {
+                    return redirect()->route('home', ['message' => 'No valid courses found in cart.']);
+                }
 
-            return Auth::user()
-            ->allowPromotionCodes()
-            ->checkout($courses, $sessionOptions, $customerOptions);
+                $sessionOptions = $this->getSessionOptions($cart->id, $courses);
+                $customerOptions = $this->getCustomerOptions();
+
+                return Auth::user()
+                    ->allowPromotionCodes()
+                    ->checkout($courses, $sessionOptions, $customerOptions);
+
+            } catch (\Exception $e) {
+                return redirect()->route('home', ['message' => 'Checkout error. Please try again.']);
+            }
         });
     }
 
@@ -90,29 +113,34 @@ class CheckoutService
 
     public function success($request)
     {
-        $session = $request->user()->stripe()->checkout->sessions->retrieve($request->get('session_id'),[]);
+        $session = $request->user()->stripe()->checkout->sessions->retrieve($request->get('session_id'), []);
 
         if($session->payment_status == 'paid'){
-            $order = $this->createOrderFromCheckoutSession($session);
-            return redirect()->route('home',['message' => $order]);
-        }
-
-        else{
-            return redirect()->route('home',['message' => 'Payment Status' . $session->payment_status . '.']);
+            $cart = Cart::findOrFail($session->metadata->cart_id);
+            $order = $this->createOrder($cart);
+            return redirect()->route('home', ['message' => 'Payment Successful.']);
+        } else {
+            return redirect()->route('home', ['message' => 'Payment Status: ' . $session->payment_status . '.']);
         }
     }
 
-    public function createOrderFromCheckoutSession($session)
+    public function createOrder($cart)
     {
         $order = Order::create([
             'user_id' => Auth::id(),
         ]);
 
-        $this->attachCoursesToOrder($order, $session);
+        $courseIds = $cart->courses()->pluck('courses.id')->toArray();
+
+        if (!empty($courseIds)) {
+            $order->courses()->syncWithoutDetaching($courseIds);
+        }
+
         $this->clearUserCart();
 
-        return 'Payment Successful.';
+        return $order;
     }
+
 
     public function attachCoursesToOrder($order, $session)
     {

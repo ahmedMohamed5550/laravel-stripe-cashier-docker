@@ -33,4 +33,14 @@ class CheckoutController extends Controller
     {
         return $this->checkoutService->success($request);
     }
+
+    public function directPaymentMethod()
+    {
+        return view ('cart.directPaymentMethod');
+    }
+
+    public function storeDirectPaymentMethod(Request $request)
+    {
+        return $this->checkoutDirectIntegrationService->store($request);
+    }
 }

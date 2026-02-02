@@ -42,7 +42,12 @@
                                 Total <span class="text-success">({{ $cartItems->totalPrice() }})</span>
                             </h5>
                         </div>
-                        <a href="{{ route('checkout.directPaymentMethod') }}" class="btn btn-success btn-lg">Checkout</a>
+                        <div>
+                            @if (Auth::user()->hasDefaultPaymentMethod())
+                                <a href="{{ route('checkout.directPaymentMethodOneClickCheckout') }}" class="btn btn-info btn-lg">One Click Checkout</a>
+                            @endif
+                            <a href="{{ route('checkout.directPaymentMethod') }}" class="btn btn-success btn-lg me-2">Checkout</a>
+                        </div>
                     </div>
                 </div>
             @else

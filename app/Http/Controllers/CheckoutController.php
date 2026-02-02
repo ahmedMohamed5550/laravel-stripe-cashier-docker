@@ -43,4 +43,9 @@ class CheckoutController extends Controller
     {
         return $this->checkoutDirectIntegrationService->store($request);
     }
+
+    public function directPaymentMethodOneClickCheckout()
+    {
+        return $this->checkoutDirectIntegrationService->oneClickCheckout();
+    }
 }

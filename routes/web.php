@@ -23,6 +23,7 @@ Route::prefix('checkout')->middleware('auth')->group(function () {
     Route::get('/line-items', [CheckoutController::class, 'lineItemsCheckout'])->name('checkout.lineItems');
     Route::get('/direct/payment-method', [CheckoutController::class, 'directPaymentMethod'])->name('checkout.directPaymentMethod');
     Route::post('/direct/payment-method', [CheckoutController::class, 'storeDirectPaymentMethod'])->name('checkout.storeDirectPaymentMethod');
+    Route::get('/direct/payment-method/one-click-checkout', [CheckoutController::class, 'directPaymentMethodOneClickCheckout'])->name('checkout.directPaymentMethodOneClickCheckout')->middleware('protect.one.click.checkout');
     Route::get('/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
 });

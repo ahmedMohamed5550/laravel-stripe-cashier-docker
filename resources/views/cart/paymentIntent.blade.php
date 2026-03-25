@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Direct Checkout - Payment Method') }}
+            {{ __('Direct Checkout - Payment Intent') }}
         </h2>
     </x-slot>
 
@@ -10,12 +10,12 @@
             <div class="bg-gray-800 text-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <!-- Stripe Elements Placeholder -->
-                    <form method="POST" id="payment-form" action="{{ route('checkout.storeDirectPaymentMethod') }}">
+                    <form method="POST" id="payment-form" action="{{ route('checkout.storeDirectPaymentIntent') }}">
                         @csrf
-                        <input type="hidden" id ="payment_method" name="payment_method">
+                        <input type="hidden" id ="payment_intent_id" name="payment_intent_id">
                         <div id="card-element"></div>
 
-                        <button id="card-button" class = "btn btn-primary mt-4" type="button">
+                        <button id="card-button" class = "btn btn-primary mt-4" type="button" data-secret="{{ $payment->client_secret }}">
                             Process Payment
                         </button>
                     </form>
@@ -28,6 +28,7 @@
 
 
 <script>
+
     const stripe = Stripe(@json(env('STRIPE_KEY')));
     const elements = stripe.elements();
     const cardElement = elements.create('card', {
@@ -46,17 +47,22 @@
     cardElement.mount('#card-element');
 
     const cardButton = document.getElementById('card-button');
+    const clientSecret = cardButton.dataset.secret;
+
     cardButton.addEventListener('click', async (e) => {
-        const { paymentMethod, error } = await stripe.createPaymentMethod(
-            'card', cardElement,
+        const { paymentIntent, error } = await stripe.confirmCardPayment(
+            clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                }
+            }
         );
 
         if (error) {
             console.log(error);
         } else {
-            // alert('Payment method created successfully!');
-            console.log(paymentMethod);
-            document.getElementById('payment_method').value = paymentMethod.id;
+            console.log(paymentIntent);
+            document.getElementById('payment_intent_id').value = paymentIntent.id;
             document.getElementById('payment-form').submit();
         }
     });

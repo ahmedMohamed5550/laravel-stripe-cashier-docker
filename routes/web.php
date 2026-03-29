@@ -25,6 +25,8 @@ Route::prefix('checkout')->middleware('auth')->group(function () {
     Route::post('/direct/payment-method', [CheckoutController::class, 'storeDirectPaymentMethod'])->name('checkout.storeDirectPaymentMethod');
     Route::get('/direct/payment-intent', [CheckoutController::class, 'directPaymentIntent'])->name('checkout.directPaymentIntent');
     Route::post('/direct/payment-intent', [CheckoutController::class, 'storeDirectPaymentIntent'])->name('checkout.storeDirectPaymentIntent');
+    Route::get('/direct/setup-intent', [CheckoutController::class, 'directSetupIntent'])->name('checkout.directSetupIntent');
+    Route::post('/direct/setup-intent', [CheckoutController::class, 'storeDirectSetupIntent'])->name('checkout.storeDirectSetupIntent');
     Route::get('/direct/payment-method/one-click-checkout', [CheckoutController::class, 'directPaymentMethodOneClickCheckout'])->name('checkout.directPaymentMethodOneClickCheckout')->middleware('protect.one.click.checkout');
     Route::get('/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');

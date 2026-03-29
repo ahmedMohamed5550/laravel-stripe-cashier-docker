@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Services\Checkout\CheckoutDirectIntegrationService;
 use App\Services\Checkout\CheckoutService;
 use App\Services\Checkout\PaymentIntentService;
+use App\Services\Checkout\SetupIntentService;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,12 +18,14 @@ class CheckoutController extends Controller
     protected $checkoutService;
     protected $checkoutDirectIntegrationService;
     protected $PaymentIntentService;
+    protected $SetupIntentService;
 
-    public function __construct(CheckoutService $checkoutService, CheckoutDirectIntegrationService $checkoutDirectIntegrationService,PaymentIntentService $PaymentIntentService)
+    public function __construct(CheckoutService $checkoutService, CheckoutDirectIntegrationService $checkoutDirectIntegrationService,PaymentIntentService $PaymentIntentService, SetupIntentService $SetupIntentService)
     {
         $this->checkoutService = $checkoutService;
         $this->checkoutDirectIntegrationService = $checkoutDirectIntegrationService;
         $this->PaymentIntentService = $PaymentIntentService;
+        $this->SetupIntentService = $SetupIntentService;
     }
 
     public function checkout()
@@ -62,6 +65,18 @@ class CheckoutController extends Controller
     {
         return $this->PaymentIntentService->store($request);
     }
+
+    public function directSetupIntent()
+    {
+        $setupIntent = Auth::user()->createSetupIntent();
+        return view ('cart.setupIntent',get_defined_vars());
+    }
+
+    public function storeDirectSetupIntent(Request $request)
+    {
+        return $this->SetupIntentService->store($request);
+    }
+
 
     public function directPaymentMethodOneClickCheckout()
     {

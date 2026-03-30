@@ -46,7 +46,7 @@
                             @if (Auth::user()->hasDefaultPaymentMethod())
                                 <a href="{{ route('checkout.directPaymentMethodOneClickCheckout') }}" class="btn btn-info btn-lg">One Click Checkout</a>
                             @endif
-                            <a href="{{ route('checkout.directSetupIntent') }}" class="btn btn-success btn-lg me-2">Checkout</a>
+                            <a href="{{ route('checkout.directPaymentMethod') }}" class="btn btn-success btn-lg me-2">Checkout</a>
                         </div>
                     </div>
                 </div>

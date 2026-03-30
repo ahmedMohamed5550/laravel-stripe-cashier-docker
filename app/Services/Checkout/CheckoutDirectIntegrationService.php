@@ -33,14 +33,20 @@ class CheckoutDirectIntegrationService
                 $paymentMethod = $request->payment_method;
 
                 $payment = Auth::user()->charge($amount, $paymentMethod, [
-                    'return_url' => route('home', ['message' => 'Payment Successful.'])
+                    'return_url' => route('home', ['message' => 'Payment Successful.']),
+                    'metadata' => [
+                        'cart_id' => $cart->id,
+                        'user_id' => Auth::id(),
+                    ],
                 ]);
 
-                if ($payment->status === 'succeeded') {
-                    return $this->successFromPayment($cart);
-                } else {
-                    return redirect()->route('home', ['message' => 'Payment failed.']);
-                }
+                return redirect()->route('home', ['message' => 'Payment Successful.']);
+
+                // if ($payment->status === 'succeeded') {
+                //     return $this->successFromPayment($cart);
+                // } else {
+                //     return redirect()->route('home', ['message' => 'Payment failed.']);
+                // }
             }
             catch (\Exception $e) {
                 return redirect()->route('home', ['message' => 'Payment processing error. Please try again.']);
